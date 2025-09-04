@@ -1,19 +1,18 @@
 #include "cursor_tracker.h"
 #include "accessibility_helper.h"
-#include <utils.h>
 #include <algorithm>
 #include <cctype>
 #include <imm.h>
 #include <locale>
 #include <oleacc.h>
 #include <psapi.h>
+#include <utils.h>
 
 namespace weasel {
 
 CursorTracker::CursorTracker()
     : enabled_(true), update_threshold_(5), cache_timeout_ms_(50),
-      last_target_window_(nullptr), call_count_(0),
-      cache_hit_count_(0) {
+      last_target_window_(nullptr), call_count_(0), cache_hit_count_(0) {
 
   DEBUG << L"CursorTracker initialized";
 }
@@ -22,8 +21,8 @@ CursorTracker::~CursorTracker() {
   if (call_count_ > 0) {
     float cache_hit_rate = (float)cache_hit_count_ / call_count_ * 100.0f;
     DEBUG << L"CursorTracker stats - Calls: " + std::to_wstring(call_count_) +
-             L", Cache hits: " + std::to_wstring(cache_hit_count_) +
-             L", Hit rate: " + std::to_wstring(cache_hit_rate) + L"%";
+                 L", Cache hits: " + std::to_wstring(cache_hit_count_) +
+                 L", Hit rate: " + std::to_wstring(cache_hit_rate) + L"%";
   }
 }
 
@@ -105,7 +104,7 @@ CursorPosition CursorTracker::GetCursorPosition(HWND targetWindow) {
     if (ShouldUpdatePosition(result)) {
       UpdateCache(result);
       DEBUG << L"Position updated to (" + std::to_wstring(result.point.x) +
-               L", " + std::to_wstring(result.point.y) + L")";
+                   L", " + std::to_wstring(result.point.y) + L")";
     }
   }
 
@@ -170,7 +169,7 @@ bool CursorTracker::TryGetIMEComposition(HWND hwnd, POINT &pt) {
     if (ClientToScreen(hwnd, &pt) && IsPositionValid(pt, hwnd)) {
       success = true;
       DEBUG << L"IME position from CompositionWindow: (" +
-               std::to_wstring(pt.x) + L", " + std::to_wstring(pt.y) + L")";
+                   std::to_wstring(pt.x) + L", " + std::to_wstring(pt.y) + L")";
     }
   }
 
@@ -184,7 +183,8 @@ bool CursorTracker::TryGetIMEComposition(HWND hwnd, POINT &pt) {
       if (ClientToScreen(hwnd, &pt) && IsPositionValid(pt, hwnd)) {
         success = true;
         DEBUG << L"IME position from CandidateWindow: (" +
-                 std::to_wstring(pt.x) + L", " + std::to_wstring(pt.y) + L")";
+                     std::to_wstring(pt.x) + L", " + std::to_wstring(pt.y) +
+                     L")";
       }
     }
   }
@@ -199,7 +199,7 @@ bool CursorTracker::TryGetIMEComposition(HWND hwnd, POINT &pt) {
       if (IsPositionValid(pt, hwnd)) {
         success = true;
         DEBUG << L"IME position from StatusWindow: (" + std::to_wstring(pt.x) +
-                 L", " + std::to_wstring(pt.y) + L")";
+                     L", " + std::to_wstring(pt.y) + L")";
       }
     }
   }
@@ -222,8 +222,8 @@ bool CursorTracker::TryGetIMEComposition(HWND hwnd, POINT &pt) {
         if (ClientToScreen(hwnd, &pt) && IsPositionValid(pt, hwnd)) {
           success = true;
           DEBUG << L"IME position estimated from font info: (" +
-                   std::to_wstring(pt.x) + L", " + std::to_wstring(pt.y) +
-                   L")";
+                       std::to_wstring(pt.x) + L", " + std::to_wstring(pt.y) +
+                       L")";
         }
       }
     }
@@ -258,7 +258,7 @@ bool CursorTracker::TryGetAccessibility(HWND hwnd, POINT &pt) {
 
   if (accessibility_helper_->GetCaretPosition(hwnd, pt)) {
     DEBUG << L"Cursor found using Accessibility API at (" +
-             std::to_wstring(pt.x) + L", " + std::to_wstring(pt.y) + L")";
+                 std::to_wstring(pt.x) + L", " + std::to_wstring(pt.y) + L")";
     return IsPositionValid(pt, hwnd);
   }
 
@@ -507,7 +507,7 @@ bool CursorTracker::TryTerminalSpecific(HWND hwnd, POINT &pt) {
       pt.y = consoleRect.top + csbi.dwCursorPosition.Y * charHeight + 30;
 
       DEBUG << L"Terminal cursor from console API: (" + std::to_wstring(pt.x) +
-               L", " + std::to_wstring(pt.y) + L")";
+                   L", " + std::to_wstring(pt.y) + L")";
       return true;
     }
   }

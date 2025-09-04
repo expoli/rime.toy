@@ -1,20 +1,19 @@
 #include "accessibility_helper.h"
-#include <utils.h>
 #include <comdef.h>
+#include <utils.h>
 
 namespace weasel {
 
 AccessibilityHelper::AccessibilityHelper()
-    : m_initialized(false), call_count_(0),
-      success_count_(0) {}
+    : m_initialized(false), call_count_(0), success_count_(0) {}
 
 AccessibilityHelper::~AccessibilityHelper() {
   if (call_count_ > 0) {
     float success_rate = (float)success_count_ / call_count_ * 100.0f;
     DEBUG << L"AccessibilityHelper stats - Calls: " +
-             std::to_wstring(call_count_) + L", Success: " +
-             std::to_wstring(success_count_) + L", Success rate: " +
-             std::to_wstring(success_rate) + L"%";
+                 std::to_wstring(call_count_) + L", Success: " +
+                 std::to_wstring(success_count_) + L", Success rate: " +
+                 std::to_wstring(success_rate) + L"%";
   }
 }
 
