@@ -286,12 +286,9 @@ bool AccessibilityHelper::IsValidPosition(const POINT &pt) {
     return false;
   }
 
-  // 检查位置是否在合理的屏幕范围内
-  int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-  int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-
-  return (pt.x >= -100 && pt.x <= screenWidth + 100 && pt.y >= -100 &&
-          pt.y <= screenHeight + 100);
+  // 使用 MonitorFromPoint 来正确处理多显示器环境
+  // 如果该点在任何一个显示器上，则返回一个有效的监视器句柄
+  return MonitorFromPoint(pt, MONITOR_DEFAULTTONULL) != NULL;
 }
 
 } // namespace weasel
