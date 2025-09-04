@@ -504,7 +504,7 @@ bool CursorTracker::TryTerminalSpecific(HWND hwnd, POINT &pt) {
       pt.x = consoleRect.left + csbi.dwCursorPosition.X * charWidth + 10;
       pt.y = consoleRect.top + csbi.dwCursorPosition.Y * charHeight + 30;
 
-      DEBUG << "Terminal cursor from console API: (" pt.x << ", " << pt.y
+      DEBUG << "Terminal cursor from console API: (" << pt.x << ", " << pt.y
             << ")";
       return true;
     }
