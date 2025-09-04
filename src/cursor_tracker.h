@@ -4,7 +4,9 @@
 
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <utils.h>
+#include <vector>
 #include <windows.h>
 
 // 前向声明
@@ -26,6 +28,7 @@ enum class ApplicationType {
   UNKNOWN,
   TERMINAL,      // 终端应用 (Windows Terminal, CMD, PowerShell)
   BROWSER,       // 浏览器应用 (Chrome, Edge, Firefox)
+  ELECTRON,      // Electron 应用 (VSCode, Discord, Slack, Teams)
   FILE_MANAGER,  // 文件管理器 (Explorer)
   OFFICE,        // Office 应用 (Word, Excel, PowerPoint)
   STANDARD_WIN32 // 标准 Win32 应用
@@ -48,6 +51,13 @@ struct CursorPosition {
         timestamp(std::chrono::steady_clock::now()) {}
 };
 
+// 用于启发式评分的候选位置结构
+struct PositionCandidate {
+  POINT point;
+  CursorDetectionMethod method;
+  int score;
+};
+
 class CursorTracker {
 public:
   CursorTracker();
@@ -61,17 +71,25 @@ public:
   void SetEnabled(bool enabled) { enabled_ = enabled; }
   void SetUpdateThreshold(int pixels) { update_threshold_ = pixels; }
   void SetCacheTimeout(int milliseconds) { cache_timeout_ms_ = milliseconds; }
+  void SetCacheTimeoutForApp(ApplicationType appType);
 
   // 调试接口
   const CursorPosition &GetLastPosition() const { return cached_position_; }
 
 private:
-  // 各种检测方法实现
-  bool TryGetGUIThreadInfo(HWND hwnd, POINT &pt);
-  bool TryGetIMEComposition(HWND hwnd, POINT &pt);
-  bool TryGetAccessibility(HWND hwnd, POINT &pt);
-  bool TryGetCaretPos(HWND hwnd, POINT &pt);
-  bool TryGetMousePosition(POINT &pt);
+  // 各种检测方法实现 (返回 optional 以收集所有证据)
+  std::optional<POINT> TryGetGUIThreadInfo(HWND hwnd);
+  std::optional<POINT> TryGetIMEComposition(HWND hwnd);
+  std::optional<POINT> TryGetAccessibility(HWND hwnd);
+  std::optional<POINT> TryGetCaretPos(HWND hwnd);
+  std::optional<POINT> TryGetMousePosition();
+
+  // 启发式引擎核心方法
+  PositionCandidate
+  FindBestCandidate(std::vector<PositionCandidate> &candidates, HWND hwnd,
+                    ApplicationType appType);
+  int ScoreCandidate(PositionCandidate &candidate, HWND hwnd,
+                     ApplicationType appType);
 
   // 辅助方法
   bool IsPositionValid(const POINT &pt, HWND hwnd);
@@ -82,17 +100,8 @@ private:
   void AdjustPositionForWindow(POINT &pt, HWND hwnd);
   bool IsPointInWindow(const POINT &pt, HWND hwnd);
 
-  // 应用类型检测和专门处理
+  // 应用类型检测
   ApplicationType DetectApplicationType(HWND hwnd);
-  bool TryDetectByApplicationType(HWND hwnd, POINT &pt,
-                                  ApplicationType appType);
-  bool ValidateDetectionResult(const POINT &pt, HWND hwnd,
-                               ApplicationType appType);
-
-  // 应用特定的检测方法
-  bool TryTerminalSpecific(HWND hwnd, POINT &pt);
-  bool TryBrowserSpecific(HWND hwnd, POINT &pt);
-  bool TryFileManagerSpecific(HWND hwnd, POINT &pt);
 
 private:
   // 配置参数
@@ -103,6 +112,10 @@ private:
   // 状态数据
   CursorPosition cached_position_; // 缓存的光标位置
   HWND last_target_window_;        // 上次的目标窗口
+
+  // 位置稳定性相关
+  POINT last_valid_position_;     // 上次有效位置
+  int consecutive_invalid_count_; // 连续无效位置计数
 
   // 无障碍接口助手
   std::unique_ptr<AccessibilityHelper> accessibility_helper_;

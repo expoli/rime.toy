@@ -104,6 +104,9 @@ bool AccessibilityHelper::TryUIAutomation(HWND hwnd, POINT &pt) {
       pt.x = rect.left + 5;
       pt.y = rect.bottom + 2;
 
+      DEBUG << "TryUIAutomation: BoundingRectangle at (" << pt.x << ", " << pt.y
+            << ")";
+
       if (IsValidPosition(pt)) {
         return true;
       }
@@ -140,6 +143,9 @@ bool AccessibilityHelper::TryUIAutomation(HWND hwnd, POINT &pt) {
                   SafeArrayUnaccessData(rectArray);
                   SafeArrayDestroy(rectArray);
 
+                  DEBUG << "TryUIAutomation: TextPattern rect at (" << pt.x
+                        << ", " << pt.y << ")";
+
                   if (IsValidPosition(pt)) {
                     return true;
                   }
@@ -175,6 +181,9 @@ bool AccessibilityHelper::TryAccessibleObjectFromWindow(HWND hwnd, POINT &pt) {
         pt.x = left;
         pt.y = top + height + 2; // 光标下方
 
+        DEBUG << "TryAccessibleObjectFromWindow: OBJID_CARET at (" << pt.x
+              << ", " << pt.y << ")";
+
         if (IsValidPosition(pt)) {
           return true;
         }
@@ -208,6 +217,9 @@ bool AccessibilityHelper::TryAccessibleObjectFromWindow(HWND hwnd, POINT &pt) {
             if (SUCCEEDED(hr)) {
               pt.x = left + 5;
               pt.y = top + height + 2;
+
+              DEBUG << "TryAccessibleObjectFromWindow: accFocus at (" << pt.x
+                    << ", " << pt.y << ")";
 
               if (IsValidPosition(pt)) {
                 VariantClear(&varFocused);
@@ -254,6 +266,8 @@ bool AccessibilityHelper::TryMSAA(HWND hwnd, POINT &pt) {
         pt.x = left + 20;
         pt.y = top + 40;
 
+        DEBUG << "TryMSAA: OBJID_WINDOW at (" << pt.x << ", " << pt.y << ")";
+
         if (IsValidPosition(pt)) {
           return true;
         }
@@ -267,6 +281,11 @@ bool AccessibilityHelper::TryMSAA(HWND hwnd, POINT &pt) {
 }
 
 bool AccessibilityHelper::IsValidPosition(const POINT &pt) {
+  // 检查明显无效的位置 (例如，接近原点)
+  if (pt.x <= 10 && pt.y <= 10) {
+    return false;
+  }
+
   // 检查位置是否在合理的屏幕范围内
   int screenWidth = GetSystemMetrics(SM_CXSCREEN);
   int screenHeight = GetSystemMetrics(SM_CYSCREEN);

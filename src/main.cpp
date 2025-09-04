@@ -112,9 +112,28 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     KeyEvent ke;
     if (ConvertKeyEvent(pKeyboard, ki, ke)) {
       bool eat = false;
+
+      bool was_composing = m_toy->GetRimeStatus().composing;
+
       m_toy->StartUI();
       eat = m_toy->ProcessKeyEvent(ke);
-      update_position(hwnd);
+
+      bool is_composing = m_toy->GetRimeStatus().composing;
+
+      // Update position only when necessary to prevent flickering
+      bool should_update = false;
+      if (is_composing && !was_composing) { // Composition just started
+        should_update = true;
+      } else if (is_composing) { // Already composing, check for navigation keys
+        DWORD vkCode = pKeyboard->vkCode;
+        if (vkCode >= VK_LEFT && vkCode <= VK_DOWN) {
+          should_update = true;
+        }
+      }
+
+      if (should_update) {
+        update_position(hwnd);
+      }
 
       auto committed = m_toy->CheckCommit();
       if (ke.keycode == ibus::Caps_Lock && eat) {
