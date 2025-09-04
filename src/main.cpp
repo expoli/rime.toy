@@ -116,8 +116,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (ConvertKeyEvent(pKeyboard, ki, ke)) {
       bool eat = m_toy->ProcessKeyEvent(ke);
       if (eat) {               // Only do UI work if the key was consumed
-        update_position(hwnd); // 1. Calculate and set the new position
         m_toy->StartUI();      // 2. Show the UI at the now-correct position
+        update_position(hwnd); // 1. Calculate and set the new position
       }
 
       auto committed = m_toy->CheckCommit();
