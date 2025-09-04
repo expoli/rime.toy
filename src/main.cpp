@@ -144,7 +144,9 @@ LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (hwnd != hwnd_previous) {
       hwnd_previous = hwnd;
       m_toy->DestroyUI();
-      update_position(hwnd);
+      if (g_cursor_tracker->IsEnabled()) {
+        g_cursor_tracker->InvalidateCache();
+      }
       return CallNextHookEx(NULL, nCode, wParam, lParam);
     }
   }
