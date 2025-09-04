@@ -94,6 +94,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
   if (hwnd != hwnd_previous) {
     hwnd_previous = hwnd;
     m_toy->DestroyUI();
+    if (g_cursor_tracker->IsEnabled()) {
+      g_cursor_tracker->InvalidateCache();
+    }
   }
   // ensure ime keyboard not open, not ok yet to Weasel
   HWND hImcWnd = ImmGetDefaultIMEWnd(hwnd);
@@ -111,14 +114,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     KeyInfo ki = parse_key(wParam, lParam);
     KeyEvent ke;
     if (ConvertKeyEvent(pKeyboard, ki, ke)) {
-      bool eat = false;
-
-      bool was_composing = m_toy->GetRimeStatus().composing;
-
-      m_toy->StartUI();
-      eat = m_toy->ProcessKeyEvent(ke);
-
-      update_position(hwnd);
+      bool eat = m_toy->ProcessKeyEvent(ke);
+      if (eat) {               // Only do UI work if the key was consumed
+        update_position(hwnd); // 1. Calculate and set the new position
+        m_toy->StartUI();      // 2. Show the UI at the now-correct position
+      }
 
       auto committed = m_toy->CheckCommit();
       if (ke.keycode == ibus::Caps_Lock && eat) {

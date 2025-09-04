@@ -75,6 +75,7 @@ public:
 
   // 调试接口
   const CursorPosition &GetLastPosition() const { return cached_position_; }
+  void InvalidateCache() { cached_position_.valid = false; }
 
 private:
   // 各种检测方法实现 (返回 optional 以收集所有证据)
