@@ -143,9 +143,9 @@ int CursorTracker::ScoreCandidate(PositionCandidate &candidate, HWND hwnd,
     int dx = abs(candidate.point.x - last_valid_position_.x);
     int dy = abs(candidate.point.y - last_valid_position_.y);
     if (dx < 20 && dy < 20) {
-      score += 100; // 高度稳定，大力奖励
+      score += 30; // 稳定，少量奖励
     } else if (dx > 500 || dy > 400) {
-      score -= 80; // 位置跳跃，严厉惩罚
+      score -= 100; // 位置跳跃，严厉惩罚
     }
   }
 
@@ -241,13 +241,30 @@ std::optional<POINT> CursorTracker::TryGetMousePosition() {
 // --- Helper methods (mostly unchanged) ---
 
 bool CursorTracker::IsPositionValid(const POINT &pt, HWND hwnd) {
-  int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-  int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-  if (pt.x < -100 || pt.x > screenWidth + 100 || pt.y < -100 ||
-      pt.y > screenHeight + 100) {
+  // 1. 拒绝接近原点的垃圾值
+  if (pt.x <= 10 && pt.y <= 10) {
     return false;
   }
-  return MonitorFromPoint(pt, MONITOR_DEFAULTTONULL) != NULL;
+
+  // 2. 确保点在某个有效的显示器上
+  if (MonitorFromPoint(pt, MONITOR_DEFAULTTONULL) == NULL) {
+    return false;
+  }
+
+  // 3. 检查是否在虚拟屏幕的合理范围内
+  int virtualScreenX = GetSystemMetrics(SM_XVIRTUALSCREEN);
+  int virtualScreenY = GetSystemMetrics(SM_YVIRTUALSCREEN);
+  int virtualScreenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+  int virtualScreenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+  RECT virtualScreenRect = {virtualScreenX, virtualScreenY,
+                          virtualScreenX + virtualScreenWidth,
+                          virtualScreenY + virtualScreenHeight};
+
+  // 允许一定的边界外区域
+  InflateRect(&virtualScreenRect, 100, 100);
+
+  return PtInRect(&virtualScreenRect, pt);
 }
 
 bool CursorTracker::ShouldUpdatePosition(const CursorPosition &newPos) {

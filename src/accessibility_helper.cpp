@@ -281,14 +281,30 @@ bool AccessibilityHelper::TryMSAA(HWND hwnd, POINT &pt) {
 }
 
 bool AccessibilityHelper::IsValidPosition(const POINT &pt) {
-  // 检查明显无效的位置 (例如，接近原点)
+  // 1. 拒绝接近原点的垃圾值
   if (pt.x <= 10 && pt.y <= 10) {
     return false;
   }
 
-  // 使用 MonitorFromPoint 来正确处理多显示器环境
-  // 如果该点在任何一个显示器上，则返回一个有效的监视器句柄
-  return MonitorFromPoint(pt, MONITOR_DEFAULTTONULL) != NULL;
+  // 2. 确保点在某个有效的显示器上
+  if (MonitorFromPoint(pt, MONITOR_DEFAULTTONULL) == NULL) {
+    return false;
+  }
+
+  // 3. 检查是否在虚拟屏幕的合理范围内 (可选，但可以防止极端异常值)
+  int virtualScreenX = GetSystemMetrics(SM_XVIRTUALSCREEN);
+  int virtualScreenY = GetSystemMetrics(SM_YVIRTUALSCREEN);
+  int virtualScreenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+  int virtualScreenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+  RECT virtualScreenRect = {virtualScreenX, virtualScreenY,
+                          virtualScreenX + virtualScreenWidth,
+                          virtualScreenY + virtualScreenHeight};
+
+  // 允许一定的边界外区域
+  InflateRect(&virtualScreenRect, 100, 100);
+
+  return PtInRect(&virtualScreenRect, pt);
 }
 
 } // namespace weasel
