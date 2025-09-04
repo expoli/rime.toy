@@ -5,7 +5,9 @@
 namespace weasel {
 
 AccessibilityHelper::AccessibilityHelper()
-    : m_initialized(false), call_count_(0), success_count_(0) {}
+    : m_initialized(false), call_count_(0), success_count_(0) {
+  DEBUG << L"AccessibilityHelper initialized";
+}
 
 AccessibilityHelper::~AccessibilityHelper() {
   if (call_count_ > 0) {
@@ -24,7 +26,7 @@ bool AccessibilityHelper::Initialize() {
   // 初始化 COM (如果尚未初始化)
   HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
   if (FAILED(hr) && hr != RPC_E_CHANGED_MODE) {
-    DEBUG << L"Failed to initialize COM: " + std::to_wstring(hr);
+    CONDDEBUG << L"Failed to initialize COM: " + std::to_wstring(hr);
     return false;
   }
 
@@ -34,9 +36,9 @@ bool AccessibilityHelper::Initialize() {
 
   if (SUCCEEDED(hr)) {
     m_initialized = true;
-    DEBUG << L"UI Automation initialized successfully";
+    CONDDEBUG << L"UI Automation initialized successfully";
   } else {
-    DEBUG << L"Failed to initialize UI Automation: " + std::to_wstring(hr);
+    CONDDEBUG << L"Failed to initialize UI Automation: " + std::to_wstring(hr);
     // 即使 UI Automation 失败，我们仍然可以尝试其他方法
     m_initialized = true;
   }
@@ -53,25 +55,25 @@ bool AccessibilityHelper::GetCaretPosition(HWND hwnd, POINT &pt) {
   // 按优先级尝试不同的无障碍方法
   if (TryUIAutomation(hwnd, pt)) {
     success_count_++;
-    DEBUG << L"Caret position found using UI Automation";
+    CONDDEBUG << L"Caret position found using UI Automation";
     return true;
   }
 
   if (TryAccessibleObjectFromWindow(hwnd, pt)) {
     success_count_++;
-    DEBUG << L"Caret position found using AccessibleObjectFromWindow";
+    CONDDEBUG << L"Caret position found using AccessibleObjectFromWindow";
     return true;
   }
 
   if (TryTextPattern(hwnd, pt)) {
     success_count_++;
-    DEBUG << L"Caret position found using Text Pattern";
+    CONDDEBUG << L"Caret position found using Text Pattern";
     return true;
   }
 
   if (TryMSAA(hwnd, pt)) {
     success_count_++;
-    DEBUG << L"Caret position found using MSAA";
+    CONDDEBUG << L"Caret position found using MSAA";
     return true;
   }
 
@@ -152,7 +154,7 @@ bool AccessibilityHelper::TryUIAutomation(HWND hwnd, POINT &pt) {
       }
     }
   } catch (...) {
-    DEBUG << L"Exception in TryUIAutomation";
+    CONDDEBUG << L"Exception in TryUIAutomation";
   }
 
   return false;
@@ -221,7 +223,7 @@ bool AccessibilityHelper::TryAccessibleObjectFromWindow(HWND hwnd, POINT &pt) {
       VariantClear(&varFocused);
     }
   } catch (...) {
-    DEBUG << L"Exception in TryAccessibleObjectFromWindow";
+    CONDDEBUG << L"Exception in TryAccessibleObjectFromWindow";
   }
 
   return false;
@@ -261,7 +263,7 @@ bool AccessibilityHelper::TryMSAA(HWND hwnd, POINT &pt) {
       }
     }
   } catch (...) {
-    DEBUG << L"Exception in TryMSAA";
+    CONDDEBUG << L"Exception in TryMSAA";
   }
 
   return false;

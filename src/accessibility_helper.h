@@ -13,6 +13,8 @@ namespace weasel {
 
 using namespace Microsoft::WRL;
 
+#define CONDDEBUG DEBUGIF(m_trayIcon->debug())
+
 class AccessibilityHelper {
 public:
   AccessibilityHelper();
