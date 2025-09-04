@@ -144,6 +144,7 @@ LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (hwnd != hwnd_previous) {
       hwnd_previous = hwnd;
       m_toy->DestroyUI();
+      update_position(hwnd);
       return CallNextHookEx(NULL, nCode, wParam, lParam);
     }
   }
